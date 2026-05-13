@@ -1,0 +1,179 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+class KdsOrderItem {
+  KdsOrderItem({
+    required this.id,
+    required this.orderId,
+    required this.menuItemId,
+    required this.quantity,
+    required this.price,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String orderId;
+  final String menuItemId;
+  final int quantity;
+  final double price;
+  final DateTime? createdAt;
+
+  factory KdsOrderItem.fromJson(Map<String, dynamic> json) {
+    return KdsOrderItem(
+      id: (json['id'] ?? '').toString(),
+      orderId: (json['order_id'] ?? json['orderId'] ?? '').toString(),
+      menuItemId: (json['menu_item_id'] ?? json['menuItemId'] ?? '').toString(),
+      quantity: _asInt(json['quantity']),
+      price: _asDouble(json['price']),
+      createdAt: _asDateTime(json['created_at'] ?? json['createdAt']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'order_id': orderId,
+      'menu_item_id': menuItemId,
+      'quantity': quantity,
+      'price': price,
+      'created_at': createdAt?.toIso8601String(),
+    };
+  }
+}
+
+class KdsOrder {
+  KdsOrder({
+    required this.id,
+    required this.restaurantId,
+    required this.tableId,
+    required this.status,
+    required this.items,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String restaurantId;
+  final String tableId;
+  final String status;
+  final List<KdsOrderItem> items;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  factory KdsOrder.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    final parsedItems = rawItems is List
+        ? rawItems
+              .whereType<Map<String, dynamic>>()
+              .map(KdsOrderItem.fromJson)
+              .toList()
+        : <KdsOrderItem>[];
+
+    return KdsOrder(
+      id: (json['id'] ?? '').toString(),
+      restaurantId: (json['restaurant_id'] ?? json['restaurantId'] ?? '').toString(),
+      tableId: (json['table_id'] ?? json['tableId'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      items: parsedItems,
+      createdAt: _asDateTime(json['created_at'] ?? json['createdAt']),
+      updatedAt: _asDateTime(json['updated_at'] ?? json['updatedAt']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'restaurant_id': restaurantId,
+      'table_id': tableId,
+      'status': status,
+      'items': items.map((item) => item.toJson()).toList(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
+    };
+  }
+}
+
+class KdsApiService {
+  KdsApiService({required this.baseUrl, http.Client? client})
+    : _client = client ?? http.Client();
+
+  final String baseUrl;
+  final http.Client _client;
+
+  Future<List<KdsOrder>> fetchSnapshot({required String restaurantId}) async {
+    final uri = Uri.parse(
+      '$baseUrl/orders',
+    ).replace(queryParameters: {'restaurantId': restaurantId});
+
+    final response = await _client.get(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Echec chargement commandes: ${response.statusCode}');
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List<dynamic>) {
+      throw Exception('Format snapshot invalide');
+    }
+
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(KdsOrder.fromJson)
+        .toList();
+  }
+
+  Future<KdsOrder> updateStatus({
+    required String orderId,
+    required String status,
+  }) async {
+    final uri = Uri.parse('$baseUrl/orders/$orderId/status');
+
+    final response = await _client.patch(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'status': status}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Echec update statut: ${response.statusCode} ${response.body}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception('Format reponse update invalide');
+    }
+
+    return KdsOrder.fromJson(decoded);
+  }
+
+  void dispose() {
+    _client.close();
+  }
+}
+
+int _asInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}
+
+double _asDouble(dynamic value) {
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
+}
+
+DateTime? _asDateTime(dynamic value) {
+  if (value == null) return null;
+  if (value is DateTime) return value;
+  if (value is String) return DateTime.tryParse(value);
+  return null;
+}
