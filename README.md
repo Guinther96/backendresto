@@ -39,10 +39,7 @@ Copier le fichier `.env.example` en `.env`:
 
 ```env
 PORT=3000
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-KDS_JWT_SECRET=replace_with_a_strong_secret
-KDS_JWT_EXPIRES_IN=12h
+
 ```
 
 ## Schema Supabase: pairing_codes
@@ -138,8 +135,7 @@ DELETE /pairing/restaurant/:restaurantId
 
 ```json
 {
-  "code": "A7K9Q2",
-  "expiresAt": "2026-05-05T10:35:00.000Z"
+
 }
 ```
 
@@ -149,7 +145,7 @@ DELETE /pairing/restaurant/:restaurantId
 
 ```json
 {
-  "code": "A7K9Q2"
+  
 }
 ```
 
