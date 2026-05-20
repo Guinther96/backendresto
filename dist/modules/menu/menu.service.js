@@ -63,12 +63,38 @@ let MenuService = class MenuService {
         }
         return data;
     }
+    async updateForRestaurant(id, restaurantId, updateMenuItemDto) {
+        const { data, error } = await this.supabaseService
+            .getClient()
+            .from('menu_items')
+            .update(updateMenuItemDto)
+            .eq('id', id)
+            .eq('restaurant_id', restaurantId)
+            .select('*')
+            .single();
+        if (error || !data) {
+            throw new common_1.NotFoundException('Menu item not found');
+        }
+        return data;
+    }
     async remove(id) {
         const { error } = await this.supabaseService
             .getClient()
             .from('menu_items')
             .delete()
             .eq('id', id);
+        if (error) {
+            throw new common_1.NotFoundException('Menu item not found');
+        }
+        return { deleted: true };
+    }
+    async removeForRestaurant(id, restaurantId) {
+        const { error } = await this.supabaseService
+            .getClient()
+            .from('menu_items')
+            .delete()
+            .eq('id', id)
+            .eq('restaurant_id', restaurantId);
         if (error) {
             throw new common_1.NotFoundException('Menu item not found');
         }

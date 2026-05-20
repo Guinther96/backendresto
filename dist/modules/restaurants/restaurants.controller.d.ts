@@ -4,8 +4,8 @@ import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 export declare class RestaurantsController {
     private readonly restaurantsService;
     constructor(restaurantsService: RestaurantsService);
-    findAll(): Promise<unknown[]>;
+    findAll(user: RequestUser): Promise<unknown>;
     findMine(user: RequestUser): Promise<unknown>;
     updateMine(user: RequestUser, dto: UpdateRestaurantDto): Promise<unknown>;
-    findOne(id: string): Promise<unknown>;
+    findOne(user: RequestUser, id: string): Promise<unknown>;
 }

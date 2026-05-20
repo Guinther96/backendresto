@@ -16,6 +16,7 @@ exports.TablesController = void 0;
 const common_1 = require("@nestjs/common");
 const tables_service_1 = require("./tables.service");
 const create_table_dto_1 = require("./dto/create-table.dto");
+const resolve_table_qr_dto_1 = require("./dto/resolve-table-qr.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let TablesController = class TablesController {
@@ -23,32 +24,54 @@ let TablesController = class TablesController {
     constructor(tablesService) {
         this.tablesService = tablesService;
     }
-    findOne(id) {
-        return this.tablesService.findOne(id);
+    findOne(user, id) {
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.tablesService.findOneForRestaurant(id, user.restaurantId);
+    }
+    resolveQr(dto) {
+        return this.tablesService.resolveByQr(dto.qrCode);
     }
     getMyRestaurantTables(user) {
         if (!user.restaurantId)
             throw new common_1.ForbiddenException('No restaurant linked');
         return this.tablesService.findByRestaurant(user.restaurantId);
     }
-    findByRestaurantAlias(restaurantId) {
+    findByRestaurantAlias(user, restaurantId) {
+        if (!user.restaurantId || user.restaurantId !== restaurantId) {
+            throw new common_1.ForbiddenException('You can only access your own restaurant tables');
+        }
         return this.tablesService.findByRestaurant(restaurantId);
     }
-    findByRestaurant(restaurantId) {
+    findByRestaurant(user, restaurantId) {
+        if (!user.restaurantId || user.restaurantId !== restaurantId) {
+            throw new common_1.ForbiddenException('You can only access your own restaurant tables');
+        }
         return this.tablesService.findByRestaurant(restaurantId);
     }
     create(createTableDto, user) {
-        return this.tablesService.create(createTableDto, user.restaurantId ?? undefined);
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.tablesService.create(createTableDto, user.restaurantId);
     }
 };
 exports.TablesController = TablesController;
 __decorate([
     (0, common_1.Get)('id/:id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], TablesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Post)('resolve-qr'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [resolve_table_qr_dto_1.ResolveTableQrDto]),
+    __metadata("design:returntype", void 0)
+], TablesController.prototype, "resolveQr", null);
 __decorate([
     (0, common_1.Get)('restaurant/me'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -59,16 +82,20 @@ __decorate([
 ], TablesController.prototype, "getMyRestaurantTables", null);
 __decorate([
     (0, common_1.Get)('restaurant/:restaurantId'),
-    __param(0, (0, common_1.Param)('restaurantId', new common_1.ParseUUIDPipe({ version: '4' }))),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('restaurantId', new common_1.ParseUUIDPipe({ version: '4' }))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], TablesController.prototype, "findByRestaurantAlias", null);
 __decorate([
     (0, common_1.Get)(':restaurantId'),
-    __param(0, (0, common_1.Param)('restaurantId', new common_1.ParseUUIDPipe({ version: '4' }))),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('restaurantId', new common_1.ParseUUIDPipe({ version: '4' }))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], TablesController.prototype, "findByRestaurant", null);
 __decorate([

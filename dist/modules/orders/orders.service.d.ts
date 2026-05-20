@@ -16,5 +16,7 @@ export declare class OrdersService {
     findByRestaurant(restaurantId: string, paginationQuery: PaginationQueryDto): Promise<unknown>;
     findByRestaurantList(restaurantId: string, paginationQuery: PaginationQueryDto): Promise<unknown[]>;
     findOne(id: string): Promise<unknown>;
+    findOneForRestaurant(id: string, restaurantId: string): Promise<unknown>;
     updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<unknown>;
+    updateStatusForRestaurant(id: string, restaurantId: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<unknown>;
 }

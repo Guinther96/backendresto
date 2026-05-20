@@ -6,10 +6,10 @@ import type { RequestUser } from '../../common/guards/jwt-auth.guard';
 export declare class OrdersController {
     private readonly ordersService;
     constructor(ordersService: OrdersService);
-    findKitchenSnapshot(restaurantId: string): Promise<unknown[]>;
+    findKitchenSnapshot(user: RequestUser): Promise<unknown[]>;
     create(createOrderDto: CreateOrderDto): Promise<unknown>;
     findMineByRestaurant(user: RequestUser, paginationQuery: PaginationQueryDto): Promise<unknown[]>;
-    findByRestaurant(restaurantId: string, paginationQuery: PaginationQueryDto): Promise<unknown>;
-    findOne(id: string): Promise<unknown>;
-    updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<unknown>;
+    findByRestaurant(user: RequestUser, restaurantId: string, paginationQuery: PaginationQueryDto): Promise<unknown>;
+    findOne(user: RequestUser, id: string): Promise<unknown>;
+    updateStatus(user: RequestUser, id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<unknown>;
 }

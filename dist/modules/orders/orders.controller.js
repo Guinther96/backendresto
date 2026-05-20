@@ -25,8 +25,10 @@ let OrdersController = class OrdersController {
     constructor(ordersService) {
         this.ordersService = ordersService;
     }
-    findKitchenSnapshot(restaurantId) {
-        return this.ordersService.findKitchenSnapshot(restaurantId);
+    findKitchenSnapshot(user) {
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.ordersService.findKitchenSnapshot(user.restaurantId);
     }
     create(createOrderDto) {
         return this.ordersService.create(createOrderDto);
@@ -36,22 +38,30 @@ let OrdersController = class OrdersController {
             throw new common_1.ForbiddenException('No restaurant linked');
         return this.ordersService.findByRestaurantList(user.restaurantId, paginationQuery);
     }
-    findByRestaurant(restaurantId, paginationQuery) {
+    findByRestaurant(user, restaurantId, paginationQuery) {
+        if (!user.restaurantId || user.restaurantId !== restaurantId) {
+            throw new common_1.ForbiddenException('You can only access your own restaurant orders');
+        }
         return this.ordersService.findByRestaurant(restaurantId, paginationQuery);
     }
-    findOne(id) {
-        return this.ordersService.findOne(id);
+    findOne(user, id) {
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.ordersService.findOneForRestaurant(id, user.restaurantId);
     }
-    updateStatus(id, updateOrderStatusDto) {
-        return this.ordersService.updateStatus(id, updateOrderStatusDto);
+    updateStatus(user, id, updateOrderStatusDto) {
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.ordersService.updateStatusForRestaurant(id, user.restaurantId, updateOrderStatusDto);
     }
 };
 exports.OrdersController = OrdersController;
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('restaurantId', new common_1.ParseUUIDPipe({ version: '4' }))),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findKitchenSnapshot", null);
 __decorate([
@@ -72,25 +82,31 @@ __decorate([
 ], OrdersController.prototype, "findMineByRestaurant", null);
 __decorate([
     (0, common_1.Get)('restaurant/:id'),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
-    __param(1, (0, common_1.Query)()),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
+    __param(2, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, pagination_query_dto_1.PaginationQueryDto]),
+    __metadata("design:paramtypes", [Object, String, pagination_query_dto_1.PaginationQueryDto]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findByRestaurant", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
-    __param(1, (0, common_1.Body)()),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_order_status_dto_1.UpdateOrderStatusDto]),
+    __metadata("design:paramtypes", [Object, String, update_order_status_dto_1.UpdateOrderStatusDto]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "updateStatus", null);
 exports.OrdersController = OrdersController = __decorate([

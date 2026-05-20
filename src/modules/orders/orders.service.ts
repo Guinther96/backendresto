@@ -185,6 +185,27 @@ export class OrdersService {
     };
   }
 
+  async findOneForRestaurant(id: string, restaurantId: string): Promise<unknown> {
+    const { data: order, error } = await this.supabaseService
+      .getClient()
+      .from('orders')
+      .select('*')
+      .eq('id', id)
+      .eq('restaurant_id', restaurantId)
+      .single();
+
+    if (error || !order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const items = await this.orderItemsService.findByOrder(id);
+
+    return {
+      ...order,
+      items,
+    };
+  }
+
   async updateStatus(
     id: string,
     updateOrderStatusDto: UpdateOrderStatusDto,
@@ -209,5 +230,33 @@ export class OrdersService {
     await this.kdsOrdersGateway.emitOrdersUpdated(order.restaurant_id);
 
     return this.findOne(order.id);
+  }
+
+  async updateStatusForRestaurant(
+    id: string,
+    restaurantId: string,
+    updateOrderStatusDto: UpdateOrderStatusDto,
+  ): Promise<unknown> {
+    const { data: order, error } = await this.supabaseService
+      .getClient()
+      .from('orders')
+      .update({ status: updateOrderStatusDto.status })
+      .eq('id', id)
+      .eq('restaurant_id', restaurantId)
+      .select('*')
+      .single();
+
+    if (error || !order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    await this.realtimeService.notifyOrderStatusUpdated({
+      orderId: order.id,
+      restaurantId: order.restaurant_id,
+      status: order.status,
+    });
+    await this.kdsOrdersGateway.emitOrdersUpdated(order.restaurant_id);
+
+    return this.findOneForRestaurant(order.id, restaurantId);
   }
 }

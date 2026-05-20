@@ -66,6 +66,22 @@ export class TablesService {
     return data;
   }
 
+  async findOneForRestaurant(id: string, restaurantId: string): Promise<unknown> {
+    const { data, error } = await this.supabaseService
+      .getClient()
+      .from('tables')
+      .select('*')
+      .eq('id', id)
+      .eq('restaurant_id', restaurantId)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException('Table not found');
+    }
+
+    return data;
+  }
+
   async create(createTableDto: CreateTableDto, restaurantIdOverride?: string): Promise<unknown> {
     const restaurantId = restaurantIdOverride;
     if (!restaurantId) {

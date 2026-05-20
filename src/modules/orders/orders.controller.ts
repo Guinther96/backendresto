@@ -12,10 +12,12 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   findKitchenSnapshot(
-    @Query('restaurantId', new ParseUUIDPipe({ version: '4' })) restaurantId: string,
+    @CurrentUser() user: RequestUser,
   ) {
-    return this.ordersService.findKitchenSnapshot(restaurantId);
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.ordersService.findKitchenSnapshot(user.restaurantId);
   }
 
   @Post()
@@ -34,23 +36,40 @@ export class OrdersController {
   }
 
   @Get('restaurant/:id')
+  @UseGuards(JwtAuthGuard)
   findByRestaurant(
+    @CurrentUser() user: RequestUser,
     @Param('id', new ParseUUIDPipe({ version: '4' })) restaurantId: string,
     @Query() paginationQuery: PaginationQueryDto,
   ) {
+    if (!user.restaurantId || user.restaurantId !== restaurantId) {
+      throw new ForbiddenException('You can only access your own restaurant orders');
+    }
     return this.ordersService.findByRestaurant(restaurantId, paginationQuery);
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.ordersService.findOne(id);
+  @UseGuards(JwtAuthGuard)
+  findOne(
+    @CurrentUser() user: RequestUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.ordersService.findOneForRestaurant(id, user.restaurantId);
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
   updateStatus(
+    @CurrentUser() user: RequestUser,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateStatus(id, updateOrderStatusDto);
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.ordersService.updateStatusForRestaurant(
+      id,
+      user.restaurantId,
+      updateOrderStatusDto,
+    );
   }
 }

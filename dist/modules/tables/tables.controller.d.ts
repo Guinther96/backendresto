@@ -1,12 +1,14 @@
 import { TablesService } from './tables.service';
 import { CreateTableDto } from './dto/create-table.dto';
+import { ResolveTableQrDto } from './dto/resolve-table-qr.dto';
 import type { RequestUser } from '../../common/guards/jwt-auth.guard';
 export declare class TablesController {
     private readonly tablesService;
     constructor(tablesService: TablesService);
-    findOne(id: string): Promise<unknown>;
+    findOne(user: RequestUser, id: string): Promise<unknown>;
+    resolveQr(dto: ResolveTableQrDto): Promise<unknown>;
     getMyRestaurantTables(user: RequestUser): Promise<unknown[]>;
-    findByRestaurantAlias(restaurantId: string): Promise<unknown[]>;
-    findByRestaurant(restaurantId: string): Promise<unknown[]>;
+    findByRestaurantAlias(user: RequestUser, restaurantId: string): Promise<unknown[]>;
+    findByRestaurant(user: RequestUser, restaurantId: string): Promise<unknown[]>;
     create(createTableDto: CreateTableDto, user: RequestUser): Promise<unknown>;
 }

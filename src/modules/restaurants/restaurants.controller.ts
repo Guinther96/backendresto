@@ -15,16 +15,19 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 
 @Controller('restaurants')
+@UseGuards(JwtAuthGuard)
 export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
 
   @Get()
-  findAll() {
-    return this.restaurantsService.findAll();
+  findAll(@CurrentUser() user: RequestUser) {
+    if (!user.restaurantId) {
+      throw new ForbiddenException('No restaurant linked to this account');
+    }
+    return this.restaurantsService.findMine(user.restaurantId);
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   findMine(@CurrentUser() user: RequestUser) {
     if (!user.restaurantId) {
       throw new ForbiddenException('No restaurant linked to this account');
@@ -33,7 +36,6 @@ export class RestaurantsController {
   }
 
   @Put('me')
-  @UseGuards(JwtAuthGuard)
   updateMine(
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdateRestaurantDto,
@@ -45,7 +47,13 @@ export class RestaurantsController {
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+  findOne(
+    @CurrentUser() user: RequestUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
+    if (!user.restaurantId || user.restaurantId !== id) {
+      throw new ForbiddenException('You can only access your own restaurant');
+    }
     return this.restaurantsService.findOne(id);
   }
 }

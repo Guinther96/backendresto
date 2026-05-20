@@ -20,8 +20,10 @@ export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
 
   @Get('id/:id')
-  findOne(@Param('id') id: string) {
-    return this.tablesService.findOne(id);
+  @UseGuards(JwtAuthGuard)
+  findOne(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.tablesService.findOneForRestaurant(id, user.restaurantId);
   }
 
   @Post('resolve-qr')
@@ -37,16 +39,26 @@ export class TablesController {
   }
 
   @Get('restaurant/:restaurantId')
+  @UseGuards(JwtAuthGuard)
   findByRestaurantAlias(
+    @CurrentUser() user: RequestUser,
     @Param('restaurantId', new ParseUUIDPipe({ version: '4' })) restaurantId: string,
   ) {
+    if (!user.restaurantId || user.restaurantId !== restaurantId) {
+      throw new ForbiddenException('You can only access your own restaurant tables');
+    }
     return this.tablesService.findByRestaurant(restaurantId);
   }
 
   @Get(':restaurantId')
+  @UseGuards(JwtAuthGuard)
   findByRestaurant(
+    @CurrentUser() user: RequestUser,
     @Param('restaurantId', new ParseUUIDPipe({ version: '4' })) restaurantId: string,
   ) {
+    if (!user.restaurantId || user.restaurantId !== restaurantId) {
+      throw new ForbiddenException('You can only access your own restaurant tables');
+    }
     return this.tablesService.findByRestaurant(restaurantId);
   }
 

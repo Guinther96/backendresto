@@ -45,11 +45,15 @@ let MenuController = class MenuController {
             throw new common_1.ForbiddenException('No restaurant linked');
         return this.menuService.create(createMenuItemDto, user.restaurantId);
     }
-    update(id, updateMenuItemDto) {
-        return this.menuService.update(id, updateMenuItemDto);
+    update(user, id, updateMenuItemDto) {
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.menuService.updateForRestaurant(id, user.restaurantId, updateMenuItemDto);
     }
-    remove(id) {
-        return this.menuService.remove(id);
+    remove(user, id) {
+        if (!user.restaurantId)
+            throw new common_1.ForbiddenException('No restaurant linked');
+        return this.menuService.removeForRestaurant(id, user.restaurantId);
     }
 };
 exports.MenuController = MenuController;
@@ -95,18 +99,20 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_menu_item_dto_1.UpdateMenuItemDto]),
+    __metadata("design:paramtypes", [Object, String, update_menu_item_dto_1.UpdateMenuItemDto]),
     __metadata("design:returntype", void 0)
 ], MenuController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], MenuController.prototype, "remove", null);
 exports.MenuController = MenuController = __decorate([

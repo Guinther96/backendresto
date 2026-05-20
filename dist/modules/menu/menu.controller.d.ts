@@ -10,8 +10,8 @@ export declare class MenuController {
     findByRestaurantAlias(restaurantId: string): Promise<unknown[]>;
     findByRestaurant(restaurantId: string): Promise<unknown[]>;
     create(createMenuItemDto: CreateMenuItemDto, user: RequestUser): Promise<unknown>;
-    update(id: string, updateMenuItemDto: UpdateMenuItemDto): Promise<unknown>;
-    remove(id: string): Promise<{
+    update(user: RequestUser, id: string, updateMenuItemDto: UpdateMenuItemDto): Promise<unknown>;
+    remove(user: RequestUser, id: string): Promise<{
         deleted: boolean;
     }>;
 }

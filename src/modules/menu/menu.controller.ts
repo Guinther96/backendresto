@@ -45,13 +45,22 @@ export class MenuController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string, @Body() updateMenuItemDto: UpdateMenuItemDto) {
-    return this.menuService.update(id, updateMenuItemDto);
+  update(
+    @CurrentUser() user: RequestUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() updateMenuItemDto: UpdateMenuItemDto,
+  ) {
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.menuService.updateForRestaurant(id, user.restaurantId, updateMenuItemDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.menuService.remove(id);
+  remove(
+    @CurrentUser() user: RequestUser,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.menuService.removeForRestaurant(id, user.restaurantId);
   }
 }

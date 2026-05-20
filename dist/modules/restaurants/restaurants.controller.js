@@ -23,8 +23,11 @@ let RestaurantsController = class RestaurantsController {
     constructor(restaurantsService) {
         this.restaurantsService = restaurantsService;
     }
-    findAll() {
-        return this.restaurantsService.findAll();
+    findAll(user) {
+        if (!user.restaurantId) {
+            throw new common_1.ForbiddenException('No restaurant linked to this account');
+        }
+        return this.restaurantsService.findMine(user.restaurantId);
     }
     findMine(user) {
         if (!user.restaurantId) {
@@ -38,20 +41,23 @@ let RestaurantsController = class RestaurantsController {
         }
         return this.restaurantsService.update(user.restaurantId, dto);
     }
-    findOne(id) {
+    findOne(user, id) {
+        if (!user.restaurantId || user.restaurantId !== id) {
+            throw new common_1.ForbiddenException('You can only access your own restaurant');
+        }
         return this.restaurantsService.findOne(id);
     }
 };
 exports.RestaurantsController = RestaurantsController;
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], RestaurantsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('me'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -59,7 +65,6 @@ __decorate([
 ], RestaurantsController.prototype, "findMine", null);
 __decorate([
     (0, common_1.Put)('me'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -68,13 +73,15 @@ __decorate([
 ], RestaurantsController.prototype, "updateMine", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4' }))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], RestaurantsController.prototype, "findOne", null);
 exports.RestaurantsController = RestaurantsController = __decorate([
     (0, common_1.Controller)('restaurants'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [restaurants_service_1.RestaurantsService])
 ], RestaurantsController);
 //# sourceMappingURL=restaurants.controller.js.map

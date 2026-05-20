@@ -7,7 +7,11 @@ export declare class MenuService {
     findByRestaurant(restaurantId: string): Promise<unknown[]>;
     create(createMenuItemDto: CreateMenuItemDto, restaurantIdOverride?: string): Promise<unknown>;
     update(id: string, updateMenuItemDto: UpdateMenuItemDto): Promise<unknown>;
+    updateForRestaurant(id: string, restaurantId: string, updateMenuItemDto: UpdateMenuItemDto): Promise<unknown>;
     remove(id: string): Promise<{
+        deleted: boolean;
+    }>;
+    removeForRestaurant(id: string, restaurantId: string): Promise<{
         deleted: boolean;
     }>;
 }

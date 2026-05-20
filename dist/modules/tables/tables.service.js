@@ -17,6 +17,26 @@ let TablesService = class TablesService {
     constructor(supabaseService) {
         this.supabaseService = supabaseService;
     }
+    async resolveByQr(qrCode) {
+        const { restaurantId, tableNumber } = this.parseTableQrCode(qrCode);
+        const { data, error } = await this.supabaseService
+            .getClient()
+            .from('tables')
+            .select('*')
+            .eq('restaurant_id', restaurantId)
+            .eq('number', tableNumber)
+            .single();
+        if (error || !data) {
+            throw new common_1.NotFoundException('Table not found for this QR code');
+        }
+        return {
+            ...data,
+            qr_payload: {
+                restaurant_id: restaurantId,
+                number: tableNumber,
+            },
+        };
+    }
     async findByRestaurant(restaurantId) {
         const { data, error } = await this.supabaseService
             .getClient()
@@ -41,10 +61,23 @@ let TablesService = class TablesService {
         }
         return data;
     }
+    async findOneForRestaurant(id, restaurantId) {
+        const { data, error } = await this.supabaseService
+            .getClient()
+            .from('tables')
+            .select('*')
+            .eq('id', id)
+            .eq('restaurant_id', restaurantId)
+            .single();
+        if (error || !data) {
+            throw new common_1.NotFoundException('Table not found');
+        }
+        return data;
+    }
     async create(createTableDto, restaurantIdOverride) {
-        const restaurantId = restaurantIdOverride ?? createTableDto.restaurant_id;
+        const restaurantId = restaurantIdOverride;
         if (!restaurantId) {
-            throw new common_1.InternalServerErrorException('restaurant_id is required');
+            throw new common_1.InternalServerErrorException('Authenticated restaurant_id is required');
         }
         const qrCode = `table:${restaurantId}:${createTableDto.number}`;
         const { data, error } = await this.supabaseService
@@ -65,6 +98,22 @@ let TablesService = class TablesService {
             throw new common_1.InternalServerErrorException(error?.message ?? 'Failed to create table');
         }
         return data;
+    }
+    parseTableQrCode(qrCode) {
+        const parts = qrCode.split(':');
+        if (parts.length !== 3 || parts[0] !== 'table') {
+            throw new common_1.BadRequestException('Invalid QR code format');
+        }
+        const restaurantId = parts[1];
+        const restaurantIdV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!restaurantIdV4Regex.test(restaurantId)) {
+            throw new common_1.BadRequestException('Invalid restaurant_id in QR code');
+        }
+        const tableNumber = Number.parseInt(parts[2], 10);
+        if (!Number.isInteger(tableNumber) || tableNumber < 1) {
+            throw new common_1.BadRequestException('Invalid table number in QR code');
+        }
+        return { restaurantId, tableNumber };
     }
 };
 exports.TablesService = TablesService;
