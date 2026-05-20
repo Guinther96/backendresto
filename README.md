@@ -99,6 +99,7 @@ DELETE /menu/:id
 GET    /tables/:restaurantId
 POST   /tables
 GET    /tables/id/:id
+POST   /tables/resolve-qr
 ```
 
 Note: les routes `GET /tables/:restaurantId` et `GET /tables/:id` entrent en collision dans NestJS, donc la route detail table utilise `GET /tables/id/:id`.

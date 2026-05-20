@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { TablesService } from './tables.service';
 import { CreateTableDto } from './dto/create-table.dto';
+import { ResolveTableQrDto } from './dto/resolve-table-qr.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import type { RequestUser } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -21,6 +22,11 @@ export class TablesController {
   @Get('id/:id')
   findOne(@Param('id') id: string) {
     return this.tablesService.findOne(id);
+  }
+
+  @Post('resolve-qr')
+  resolveQr(@Body() dto: ResolveTableQrDto) {
+    return this.tablesService.resolveByQr(dto.qrCode);
   }
 
   @Get('restaurant/me')
@@ -47,6 +53,7 @@ export class TablesController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() createTableDto: CreateTableDto, @CurrentUser() user: RequestUser) {
-    return this.tablesService.create(createTableDto, user.restaurantId ?? undefined);
+    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    return this.tablesService.create(createTableDto, user.restaurantId);
   }
 }
