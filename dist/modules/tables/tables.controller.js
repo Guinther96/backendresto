@@ -16,7 +16,6 @@ exports.TablesController = void 0;
 const common_1 = require("@nestjs/common");
 const tables_service_1 = require("./tables.service");
 const create_table_dto_1 = require("./dto/create-table.dto");
-const resolve_table_qr_dto_1 = require("./dto/resolve-table-qr.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let TablesController = class TablesController {
@@ -30,7 +29,12 @@ let TablesController = class TablesController {
         return this.tablesService.findOneForRestaurant(id, user.restaurantId);
     }
     resolveQr(dto) {
-        return this.tablesService.resolveByQr(dto.qrCode);
+        const qrCode = typeof dto?.qrCode === 'string'
+            ? dto.qrCode
+            : typeof dto?.qr_code === 'string'
+                ? dto.qr_code
+                : '';
+        return this.tablesService.resolveByQr(qrCode);
     }
     getMyRestaurantTables(user) {
         if (!user.restaurantId)
@@ -69,7 +73,7 @@ __decorate([
     (0, common_1.Post)('resolve-qr'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [resolve_table_qr_dto_1.ResolveTableQrDto]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], TablesController.prototype, "resolveQr", null);
 __decorate([

@@ -18,7 +18,34 @@ let TablesService = class TablesService {
         this.supabaseService = supabaseService;
     }
     async resolveByQr(qrCode) {
-        const { restaurantId, tableNumber } = this.parseTableQrCode(qrCode);
+        if (typeof qrCode !== 'string' || qrCode.trim().length === 0) {
+            throw new common_1.BadRequestException('qrCode is required');
+        }
+        const normalizedQrCode = qrCode.trim();
+        const tableByExactQr = await this.findByExactQrCode(normalizedQrCode);
+        if (tableByExactQr) {
+            return {
+                ...tableByExactQr,
+                qr_payload: {
+                    restaurant_id: tableByExactQr.restaurant_id,
+                    number: tableByExactQr.number,
+                },
+            };
+        }
+        const decodedPayload = this.extractQrPayloadFromUrl(normalizedQrCode);
+        if (decodedPayload && decodedPayload !== normalizedQrCode) {
+            const tableByDecodedQr = await this.findByExactQrCode(decodedPayload);
+            if (tableByDecodedQr) {
+                return {
+                    ...tableByDecodedQr,
+                    qr_payload: {
+                        restaurant_id: tableByDecodedQr.restaurant_id,
+                        number: tableByDecodedQr.number,
+                    },
+                };
+            }
+        }
+        const { restaurantId, tableNumber } = this.parseTableQrCode(decodedPayload ?? normalizedQrCode);
         const { data, error } = await this.supabaseService
             .getClient()
             .from('tables')
@@ -114,6 +141,47 @@ let TablesService = class TablesService {
             throw new common_1.BadRequestException('Invalid table number in QR code');
         }
         return { restaurantId, tableNumber };
+    }
+    async findByExactQrCode(qrCode) {
+        const { data, error } = await this.supabaseService
+            .getClient()
+            .from('tables')
+            .select('*')
+            .eq('qr_code', qrCode)
+            .maybeSingle();
+        if (error) {
+            throw new common_1.InternalServerErrorException(error.message);
+        }
+        return data ?? null;
+    }
+    extractQrPayloadFromUrl(qrValue) {
+        try {
+            const url = new URL(qrValue);
+            const queryCandidates = [
+                url.searchParams.get('qr'),
+                url.searchParams.get('qrCode'),
+                url.searchParams.get('qrcode'),
+                url.searchParams.get('code'),
+            ];
+            for (const candidate of queryCandidates) {
+                if (candidate && candidate.trim().length > 0) {
+                    return candidate.trim();
+                }
+            }
+            const pathCandidates = [
+                decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() ?? ''),
+                decodeURIComponent(url.hash.replace(/^#/, '')),
+            ];
+            for (const candidate of pathCandidates) {
+                if (candidate && candidate.startsWith('table:')) {
+                    return candidate;
+                }
+            }
+            return null;
+        }
+        catch {
+            return null;
+        }
     }
 };
 exports.TablesService = TablesService;

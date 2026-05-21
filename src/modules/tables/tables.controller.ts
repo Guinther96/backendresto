@@ -27,8 +27,15 @@ export class TablesController {
   }
 
   @Post('resolve-qr')
-  resolveQr(@Body() dto: ResolveTableQrDto) {
-    return this.tablesService.resolveByQr(dto.qrCode);
+  resolveQr(@Body() dto: ResolveTableQrDto & { qr_code?: string }) {
+    const qrCode =
+      typeof dto?.qrCode === 'string'
+        ? dto.qrCode
+        : typeof dto?.qr_code === 'string'
+          ? dto.qr_code
+          : '';
+
+    return this.tablesService.resolveByQr(qrCode);
   }
 
   @Get('restaurant/me')
