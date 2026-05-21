@@ -120,7 +120,8 @@ export class TablesService {
     if (!restaurantId) {
       throw new InternalServerErrorException('Authenticated restaurant_id is required');
     }
-    const qrCode = `table:${restaurantId}:${createTableDto.number}`;
+    const frontendUrl = (process.env.FRONTEND_URL ?? 'https://ordersclient.netlify.app').replace(/\/$/, '');
+    const qrCode = `${frontendUrl}/menu/${restaurantId}?table=${createTableDto.number}`;
 
     const { data, error } = await this.supabaseService
       .getClient()
