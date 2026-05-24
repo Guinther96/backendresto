@@ -40,6 +40,23 @@ export class SupabaseService {
   }
 
   /**
+   * Creates a Supabase client using the anon/public key.
+   * Use for one-off auth operations on the server to avoid shared session state.
+   */
+  getAnonClient(): SupabaseClient {
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const supabaseAnonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new InternalServerErrorException(
+        'SUPABASE_URL and SUPABASE_ANON_KEY are required for anon clients.',
+      );
+    }
+
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+
+  /**
    * Creates a Supabase client scoped to an end-user using the anon/public key
    * and the provided access token. This allows RLS policies to apply.
    */

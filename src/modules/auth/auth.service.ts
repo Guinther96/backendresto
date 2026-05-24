@@ -84,7 +84,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<unknown> {
-    const supabase = this.supabaseService.getClient();
+    const supabase = this.supabaseService.getAnonClient();
 
     const { data: signInData, error: signInError } =
       await supabase.auth.signInWithPassword({
