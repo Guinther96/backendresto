@@ -21,9 +21,10 @@ exports.PairingModule = PairingModule = __decorate([
             jwt_1.JwtModule.registerAsync({
                 inject: [config_1.ConfigService],
                 useFactory: (configService) => {
-                    const secret = configService.get('KDS_JWT_SECRET');
+                    const secret = configService.get('KDS_JWT_SECRET') ||
+                        configService.get('JWT_SECRET');
                     if (!secret) {
-                        throw new Error('KDS_JWT_SECRET is required');
+                        throw new Error('KDS_JWT_SECRET or JWT_SECRET is required');
                     }
                     return { secret };
                 },
