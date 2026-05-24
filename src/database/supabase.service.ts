@@ -4,14 +4,18 @@ import { SupabaseClient, createClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseService {
-  private client: SupabaseClient | null = null;
+  private serviceClient: SupabaseClient | null = null;
+  private anonKey: string | null = null;
 
   constructor(private readonly configService: ConfigService) {}
 
+  /**
+   * Compatibility shim: many services call `getClient()` to obtain a
+   * server-side Supabase client. Keep that API while also exposing
+   * `getServiceClient()` as an alias.
+   */
   getClient(): SupabaseClient {
-    if (this.client) {
-      return this.client;
-    }
+    if (this.serviceClient) return this.serviceClient;
 
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseServiceRoleKey = this.configService.get<string>(
@@ -24,7 +28,36 @@ export class SupabaseService {
       );
     }
 
-    this.client = createClient(supabaseUrl, supabaseServiceRoleKey);
-    return this.client;
+    this.serviceClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+    return this.serviceClient;
+  }
+
+  /**
+   * Backwards-compatible alias.
+   */
+  getServiceClient(): SupabaseClient {
+    return this.getClient();
+  }
+
+  /**
+   * Creates a Supabase client scoped to an end-user using the anon/public key
+   * and the provided access token. This allows RLS policies to apply.
+   */
+  getClientWithAuth(accessToken: string): SupabaseClient {
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const supabaseAnonKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new InternalServerErrorException(
+        'SUPABASE_URL and SUPABASE_ANON_KEY are required for user-scoped clients.',
+      );
+    }
+
+    // create a client per request with the anon key and set the Authorization header
+    const client = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    });
+
+    return client;
   }
 }

@@ -66,7 +66,10 @@ export class AuthService {
       .single();
 
     if (linkedProfileError || !linkedProfile) {
-      await supabase.from('restaurants').delete().eq('id', (restaurant as { id: string }).id);
+      await supabase
+        .from('restaurants')
+        .delete()
+        .eq('id', (restaurant as { id: string }).id);
       await supabase.from('users').delete().eq('id', userId);
       await supabase.auth.admin.deleteUser(userId);
       throw new InternalServerErrorException(
@@ -74,7 +77,10 @@ export class AuthService {
       );
     }
 
-    return { message: 'Registration successful', restaurantId: (restaurant as { id: string }).id };
+    return {
+      message: 'Registration successful',
+      restaurantId: (restaurant as { id: string }).id,
+    };
   }
 
   async login(dto: LoginDto): Promise<unknown> {

@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../../database/supabase.service';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 
@@ -59,7 +63,10 @@ export class RestaurantsService {
     };
   }
 
-  async update(restaurantId: string, dto: UpdateRestaurantDto): Promise<unknown> {
+  async update(
+    restaurantId: string,
+    dto: UpdateRestaurantDto,
+  ): Promise<unknown> {
     const { data, error } = await this.supabaseService
       .getClient()
       .from('restaurants')

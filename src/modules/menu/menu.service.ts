@@ -27,8 +27,12 @@ export class MenuService {
     return data ?? [];
   }
 
-  async create(createMenuItemDto: CreateMenuItemDto, restaurantIdOverride?: string): Promise<unknown> {
-    const restaurantId = restaurantIdOverride ?? createMenuItemDto.restaurant_id;
+  async create(
+    createMenuItemDto: CreateMenuItemDto,
+    restaurantIdOverride?: string,
+  ): Promise<unknown> {
+    const restaurantId =
+      restaurantIdOverride ?? createMenuItemDto.restaurant_id;
     if (!restaurantId) {
       throw new InternalServerErrorException('restaurant_id is required');
     }
@@ -52,7 +56,10 @@ export class MenuService {
     return data;
   }
 
-  async update(id: string, updateMenuItemDto: UpdateMenuItemDto): Promise<unknown> {
+  async update(
+    id: string,
+    updateMenuItemDto: UpdateMenuItemDto,
+  ): Promise<unknown> {
     const { data, error } = await this.supabaseService
       .getClient()
       .from('menu_items')

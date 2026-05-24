@@ -18,24 +18,29 @@ export class JwtAuthGuard implements CanActivate {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Record<string, unknown>>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Record<string, unknown>>();
     const token = this.extractToken(request);
 
     if (!token) {
       throw new UnauthorizedException('Missing authorization token');
     }
 
-    const supabase = this.supabaseService.getClient();
+    const serviceClient = this.supabaseService.getServiceClient();
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser(token);
+    } = await serviceClient.auth.getUser(token);
 
     if (error || !user) {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const { data: profile } = await supabase
+    // Use a user-scoped client (anon key + access token) so that RLS policies
+    // can be applied server-side and queries return only rows the user can see.
+    const userClient = this.supabaseService.getClientWithAuth(token);
+    const { data: profile } = await userClient
       .from('users')
       .select('role, restaurant_id')
       .eq('id', user.id)
@@ -49,12 +54,14 @@ export class JwtAuthGuard implements CanActivate {
         (profile as { restaurant_id?: string } | null)?.restaurant_id ?? null,
     };
 
-    (request as Record<string, unknown>).user = requestUser;
+    request.user = requestUser;
     return true;
   }
 
   private extractToken(request: Record<string, unknown>): string | null {
-    const headers = request.headers as Record<string, string | string[]> | undefined;
+    const headers = request.headers as
+      | Record<string, string | string[]>
+      | undefined;
     const rawAuthorization = headers?.authorization;
     const authorization = Array.isArray(rawAuthorization)
       ? rawAuthorization[0]

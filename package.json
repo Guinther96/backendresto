@@ -24,7 +24,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migration:fix-order-items": "ts-node -r tsconfig-paths/register src/scripts/migration-fix-order-items.ts",
+    "validate:rls-policies": "ts-node -r tsconfig-paths/register src/scripts/validate-rls-policies.ts",
+    "validate:data-leakage": "node ./scripts/check-unscoped-queries.js && npm run validate:rls-policies"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

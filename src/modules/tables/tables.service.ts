@@ -99,7 +99,10 @@ export class TablesService {
     return data;
   }
 
-  async findOneForRestaurant(id: string, restaurantId: string): Promise<unknown> {
+  async findOneForRestaurant(
+    id: string,
+    restaurantId: string,
+  ): Promise<unknown> {
     const { data, error } = await this.supabaseService
       .getClient()
       .from('tables')
@@ -115,12 +118,19 @@ export class TablesService {
     return data;
   }
 
-  async create(createTableDto: CreateTableDto, restaurantIdOverride?: string): Promise<unknown> {
+  async create(
+    createTableDto: CreateTableDto,
+    restaurantIdOverride?: string,
+  ): Promise<unknown> {
     const restaurantId = restaurantIdOverride;
     if (!restaurantId) {
-      throw new InternalServerErrorException('Authenticated restaurant_id is required');
+      throw new InternalServerErrorException(
+        'Authenticated restaurant_id is required',
+      );
     }
-    const frontendUrl = (process.env.FRONTEND_URL ?? 'https://ordersclient.netlify.app').replace(/\/$/, '');
+    const frontendUrl = (
+      process.env.FRONTEND_URL ?? 'https://ordersclient.netlify.app'
+    ).replace(/\/$/, '');
     const qrCode = `${frontendUrl}/menu/${restaurantId}?table=${createTableDto.number}`;
 
     const { data, error } = await this.supabaseService
@@ -130,7 +140,9 @@ export class TablesService {
         restaurant_id: restaurantId,
         number: createTableDto.number,
         qr_code: qrCode,
-        ...(createTableDto.capacity !== undefined ? { capacity: createTableDto.capacity } : {}),
+        ...(createTableDto.capacity !== undefined
+          ? { capacity: createTableDto.capacity }
+          : {}),
       })
       .select('*')
       .single();
@@ -142,13 +154,18 @@ export class TablesService {
     }
 
     if (error || !data) {
-      throw new InternalServerErrorException(error?.message ?? 'Failed to create table');
+      throw new InternalServerErrorException(
+        error?.message ?? 'Failed to create table',
+      );
     }
 
     return data;
   }
 
-  private parseTableQrCode(qrCode: string): { restaurantId: string; tableNumber: number } {
+  private parseTableQrCode(qrCode: string): {
+    restaurantId: string;
+    tableNumber: number;
+  } {
     const parts = qrCode.split(':');
     if (parts.length !== 3 || parts[0] !== 'table') {
       throw new BadRequestException('Invalid QR code format');
@@ -172,7 +189,9 @@ export class TablesService {
 
   private async findByExactQrCode(
     qrCode: string,
-  ): Promise<{ restaurant_id: string; number: number } & Record<string, unknown> | null> {
+  ): Promise<
+    ({ restaurant_id: string; number: number } & Record<string, unknown>) | null
+  > {
     const { data, error } = await this.supabaseService
       .getClient()
       .from('tables')
@@ -184,7 +203,11 @@ export class TablesService {
       throw new InternalServerErrorException(error.message);
     }
 
-    return (data as ({ restaurant_id: string; number: number } & Record<string, unknown>) | null) ?? null;
+    return (
+      (data as
+        | ({ restaurant_id: string; number: number } & Record<string, unknown>)
+        | null) ?? null
+    );
   }
 
   private extractQrPayloadFromUrl(qrValue: string): string | null {

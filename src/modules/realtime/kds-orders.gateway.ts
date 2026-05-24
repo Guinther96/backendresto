@@ -37,7 +37,8 @@ export class KdsOrdersGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { restaurantId?: string },
   ): Promise<void> {
-    const restaurantId = payload?.restaurantId ?? this.extractRestaurantId(client.handshake.query);
+    const restaurantId =
+      payload?.restaurantId ?? this.extractRestaurantId(client.handshake.query);
     if (!restaurantId) {
       client.emit('orders.updated', { orders: [] });
       return;
@@ -50,7 +51,9 @@ export class KdsOrdersGateway implements OnGatewayConnection {
   async emitOrdersUpdated(restaurantId: string): Promise<void> {
     try {
       const orders = await this.getKitchenSnapshot(restaurantId);
-      this.server.to(this.roomName(restaurantId)).emit('orders.updated', { orders });
+      this.server
+        .to(this.roomName(restaurantId))
+        .emit('orders.updated', { orders });
     } catch (error) {
       this.logger.warn(
         `Failed to emit orders.updated for restaurant ${restaurantId}: ${String(error)}`,
@@ -96,7 +99,9 @@ export class KdsOrdersGateway implements OnGatewayConnection {
     return `restaurant:${restaurantId}`;
   }
 
-  private extractRestaurantId(query: Socket['handshake']['query']): string | null {
+  private extractRestaurantId(
+    query: Socket['handshake']['query'],
+  ): string | null {
     const raw = query?.restaurantId;
     if (typeof raw === 'string' && raw.length > 0) {
       return raw;

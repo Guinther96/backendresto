@@ -40,7 +40,9 @@ export class StaffService {
     }
 
     if ((existing as { restaurant_id?: string }).restaurant_id) {
-      throw new BadRequestException('This user is already part of a restaurant');
+      throw new BadRequestException(
+        'This user is already part of a restaurant',
+      );
     }
 
     const { data, error } = await supabase
@@ -51,7 +53,9 @@ export class StaffService {
       .single();
 
     if (error || !data) {
-      throw new InternalServerErrorException(error?.message ?? 'Failed to add staff');
+      throw new InternalServerErrorException(
+        error?.message ?? 'Failed to add staff',
+      );
     }
 
     return data;
@@ -66,13 +70,16 @@ export class StaffService {
       .eq('id', staffUserId)
       .single();
 
-    if (!user || (user as { restaurant_id?: string }).restaurant_id !== restaurantId) {
+    if (
+      !user ||
+      (user as { restaurant_id?: string }).restaurant_id !== restaurantId
+    ) {
       throw new ForbiddenException('Staff member not found in your restaurant');
     }
 
     const { error } = await supabase
       .from('users')
-      .update({ restaurant_id: null, role: 'owner' })
+      .update({ restaurant_id: null, role: 'user' })
       .eq('id', staffUserId);
 
     if (error) throw new InternalServerErrorException(error.message);

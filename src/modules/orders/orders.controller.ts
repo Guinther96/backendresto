@@ -1,4 +1,15 @@
-import { Body, Controller, ForbiddenException, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -13,10 +24,9 @@ export class OrdersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  findKitchenSnapshot(
-    @CurrentUser() user: RequestUser,
-  ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+  findKitchenSnapshot(@CurrentUser() user: RequestUser) {
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.ordersService.findKitchenSnapshot(user.restaurantId);
   }
 
@@ -31,8 +41,12 @@ export class OrdersController {
     @CurrentUser() user: RequestUser,
     @Query() paginationQuery: PaginationQueryDto,
   ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
-    return this.ordersService.findByRestaurantList(user.restaurantId, paginationQuery);
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
+    return this.ordersService.findByRestaurantList(
+      user.restaurantId,
+      paginationQuery,
+    );
   }
 
   @Get('restaurant/:id')
@@ -43,7 +57,9 @@ export class OrdersController {
     @Query() paginationQuery: PaginationQueryDto,
   ) {
     if (!user.restaurantId || user.restaurantId !== restaurantId) {
-      throw new ForbiddenException('You can only access your own restaurant orders');
+      throw new ForbiddenException(
+        'You can only access your own restaurant orders',
+      );
     }
     return this.ordersService.findByRestaurant(restaurantId, paginationQuery);
   }
@@ -54,7 +70,8 @@ export class OrdersController {
     @CurrentUser() user: RequestUser,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.ordersService.findOneForRestaurant(id, user.restaurantId);
   }
 
@@ -65,7 +82,8 @@ export class OrdersController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
   ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.ordersService.updateStatusForRestaurant(
       id,
       user.restaurantId,

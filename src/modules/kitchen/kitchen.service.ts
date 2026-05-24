@@ -15,14 +15,10 @@ export class KitchenService {
     orderId: string,
     updateOrderStatusDto: UpdateOrderStatusDto,
   ): Promise<unknown> {
-    const order = (await this.ordersService.findOne(orderId)) as {
-      restaurant_id?: string;
-    };
-
-    if (order.restaurant_id !== restaurantId) {
-      throw new ForbiddenException('Order does not belong to your restaurant');
-    }
-
-    return this.ordersService.updateStatus(orderId, updateOrderStatusDto);
+    return this.ordersService.updateStatusForRestaurant(
+      orderId,
+      restaurantId,
+      updateOrderStatusDto,
+    );
   }
 }

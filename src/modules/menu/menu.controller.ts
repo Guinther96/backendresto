@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
@@ -13,33 +24,43 @@ export class MenuController {
   @Get()
   @UseGuards(JwtAuthGuard)
   findMyMenu(@CurrentUser() user: RequestUser) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.menuService.findByRestaurant(user.restaurantId);
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   findMine(@CurrentUser() user: RequestUser) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.menuService.findByRestaurant(user.restaurantId);
   }
 
   @Get('restaurant/:restaurantId')
   findByRestaurantAlias(
-    @Param('restaurantId', new ParseUUIDPipe({ version: '4' })) restaurantId: string,
+    @Param('restaurantId', new ParseUUIDPipe({ version: '4' }))
+    restaurantId: string,
   ) {
     return this.menuService.findByRestaurant(restaurantId);
   }
 
   @Get(':restaurantId')
-  findByRestaurant(@Param('restaurantId', new ParseUUIDPipe({ version: '4' })) restaurantId: string) {
+  findByRestaurant(
+    @Param('restaurantId', new ParseUUIDPipe({ version: '4' }))
+    restaurantId: string,
+  ) {
     return this.menuService.findByRestaurant(restaurantId);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  create(@Body() createMenuItemDto: CreateMenuItemDto, @CurrentUser() user: RequestUser) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+  create(
+    @Body() createMenuItemDto: CreateMenuItemDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.menuService.create(createMenuItemDto, user.restaurantId);
   }
 
@@ -50,8 +71,13 @@ export class MenuController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateMenuItemDto: UpdateMenuItemDto,
   ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
-    return this.menuService.updateForRestaurant(id, user.restaurantId, updateMenuItemDto);
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
+    return this.menuService.updateForRestaurant(
+      id,
+      user.restaurantId,
+      updateMenuItemDto,
+    );
   }
 
   @Delete(':id')
@@ -60,7 +86,8 @@ export class MenuController {
     @CurrentUser() user: RequestUser,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.menuService.removeForRestaurant(id, user.restaurantId);
   }
 }

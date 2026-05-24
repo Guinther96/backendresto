@@ -26,7 +26,9 @@ export class PairingController {
     @Body() dto: GeneratePairingCodeDto,
   ) {
     if (!user.restaurantId || user.restaurantId !== dto.restaurantId) {
-      throw new ForbiddenException('You can only generate a code for your restaurant');
+      throw new ForbiddenException(
+        'You can only generate a code for your restaurant',
+      );
     }
     return this.pairingService.generateCode(dto.restaurantId);
   }
@@ -40,10 +42,13 @@ export class PairingController {
   @UseGuards(JwtAuthGuard)
   invalidateRestaurantCodes(
     @CurrentUser() user: RequestUser,
-    @Param('restaurantId', new ParseUUIDPipe({ version: '4' })) restaurantId: string,
+    @Param('restaurantId', new ParseUUIDPipe({ version: '4' }))
+    restaurantId: string,
   ) {
     if (!user.restaurantId || user.restaurantId !== restaurantId) {
-      throw new ForbiddenException('You can only invalidate your restaurant codes');
+      throw new ForbiddenException(
+        'You can only invalidate your restaurant codes',
+      );
     }
     return this.pairingService.invalidateRestaurantCodes(restaurantId);
   }

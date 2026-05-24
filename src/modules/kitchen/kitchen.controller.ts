@@ -21,7 +21,8 @@ export class KitchenController {
 
   @Get('orders/me')
   findMyKitchenSnapshot(@CurrentUser() user: RequestUser) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.kitchenService.findSnapshot(user.restaurantId);
   }
 
@@ -31,7 +32,8 @@ export class KitchenController {
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
   ) {
-    if (!user.restaurantId) throw new ForbiddenException('No restaurant linked');
+    if (!user.restaurantId)
+      throw new ForbiddenException('No restaurant linked');
     return this.kitchenService.updateOrderStatus(
       user.restaurantId,
       id,

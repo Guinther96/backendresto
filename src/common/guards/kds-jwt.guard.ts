@@ -21,7 +21,9 @@ export class KdsJwtGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Record<string, unknown>>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Record<string, unknown>>();
     const token = this.extractToken(request);
     const path = this.getRequestPath(request);
     const method = this.getRequestMethod(request);
@@ -65,7 +67,7 @@ export class KdsJwtGuard implements CanActivate {
       restaurantId,
     };
 
-    (request as Record<string, unknown>).user = requestUser;
+    request.user = requestUser;
     this.logger.log(
       `Authorized ${method} ${path} for restaurant ${restaurantId}`,
     );
@@ -73,7 +75,9 @@ export class KdsJwtGuard implements CanActivate {
   }
 
   private extractToken(request: Record<string, unknown>): string | null {
-    const headers = request.headers as Record<string, string | string[]> | undefined;
+    const headers = request.headers as
+      | Record<string, string | string[]>
+      | undefined;
     const rawAuthorization = headers?.authorization;
     const authorization = Array.isArray(rawAuthorization)
       ? rawAuthorization[0]

@@ -67,7 +67,9 @@ export class OrdersService {
       throw new InternalServerErrorException(menuError.message);
     }
 
-    const menuMap = new Map((menuItems ?? []).map((menuItem) => [menuItem.id, menuItem]));
+    const menuMap = new Map(
+      (menuItems ?? []).map((menuItem) => [menuItem.id, menuItem]),
+    );
 
     for (const item of createOrderDto.items) {
       const found = menuMap.get(item.menu_item_id);
@@ -158,7 +160,10 @@ export class OrdersService {
     restaurantId: string,
     paginationQuery: PaginationQueryDto,
   ): Promise<unknown[]> {
-    const result = await this.findByRestaurant(restaurantId, paginationQuery) as {
+    const result = (await this.findByRestaurant(
+      restaurantId,
+      paginationQuery,
+    )) as {
       data?: unknown[];
     };
 
@@ -185,7 +190,10 @@ export class OrdersService {
     };
   }
 
-  async findOneForRestaurant(id: string, restaurantId: string): Promise<unknown> {
+  async findOneForRestaurant(
+    id: string,
+    restaurantId: string,
+  ): Promise<unknown> {
     const { data: order, error } = await this.supabaseService
       .getClient()
       .from('orders')
