@@ -20,7 +20,9 @@ let KdsJwtGuard = KdsJwtGuard_1 = class KdsJwtGuard {
         this.jwtService = jwtService;
     }
     async canActivate(context) {
-        const request = context.switchToHttp().getRequest();
+        const request = context
+            .switchToHttp()
+            .getRequest();
         const token = this.extractToken(request);
         const path = this.getRequestPath(request);
         const method = this.getRequestMethod(request);

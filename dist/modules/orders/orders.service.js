@@ -128,7 +128,7 @@ let OrdersService = class OrdersService {
         };
     }
     async findByRestaurantList(restaurantId, paginationQuery) {
-        const result = await this.findByRestaurant(restaurantId, paginationQuery);
+        const result = (await this.findByRestaurant(restaurantId, paginationQuery));
         return result.data ?? [];
     }
     async findOne(id) {

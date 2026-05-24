@@ -115,7 +115,9 @@ let TablesService = class TablesService {
             restaurant_id: restaurantId,
             number: createTableDto.number,
             qr_code: qrCode,
-            ...(createTableDto.capacity !== undefined ? { capacity: createTableDto.capacity } : {}),
+            ...(createTableDto.capacity !== undefined
+                ? { capacity: createTableDto.capacity }
+                : {}),
         })
             .select('*')
             .single();
@@ -153,7 +155,7 @@ let TablesService = class TablesService {
         if (error) {
             throw new common_1.InternalServerErrorException(error.message);
         }
-        return data ?? null;
+        return (data ?? null);
     }
     extractQrPayloadFromUrl(qrValue) {
         try {

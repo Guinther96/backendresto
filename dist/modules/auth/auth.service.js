@@ -57,15 +57,21 @@ let AuthService = class AuthService {
             .select('id, restaurant_id')
             .single();
         if (linkedProfileError || !linkedProfile) {
-            await supabase.from('restaurants').delete().eq('id', restaurant.id);
+            await supabase
+                .from('restaurants')
+                .delete()
+                .eq('id', restaurant.id);
             await supabase.from('users').delete().eq('id', userId);
             await supabase.auth.admin.deleteUser(userId);
             throw new common_1.InternalServerErrorException(linkedProfileError?.message ?? 'Failed to link restaurant to user');
         }
-        return { message: 'Registration successful', restaurantId: restaurant.id };
+        return {
+            message: 'Registration successful',
+            restaurantId: restaurant.id,
+        };
     }
     async login(dto) {
-        const supabase = this.supabaseService.getClient();
+        const supabase = this.supabaseService.getAnonClient();
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: dto.email,
             password: dto.password,

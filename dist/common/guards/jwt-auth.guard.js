@@ -18,17 +18,20 @@ let JwtAuthGuard = class JwtAuthGuard {
         this.supabaseService = supabaseService;
     }
     async canActivate(context) {
-        const request = context.switchToHttp().getRequest();
+        const request = context
+            .switchToHttp()
+            .getRequest();
         const token = this.extractToken(request);
         if (!token) {
             throw new common_1.UnauthorizedException('Missing authorization token');
         }
-        const supabase = this.supabaseService.getClient();
-        const { data: { user }, error, } = await supabase.auth.getUser(token);
+        const serviceClient = this.supabaseService.getServiceClient();
+        const { data: { user }, error, } = await serviceClient.auth.getUser(token);
         if (error || !user) {
             throw new common_1.UnauthorizedException('Invalid or expired token');
         }
-        const { data: profile } = await supabase
+        const userClient = this.supabaseService.getClientWithAuth(token);
+        const { data: profile } = await userClient
             .from('users')
             .select('role, restaurant_id')
             .eq('id', user.id)

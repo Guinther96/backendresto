@@ -45,7 +45,9 @@ let KdsOrdersGateway = KdsOrdersGateway_1 = class KdsOrdersGateway {
     async emitOrdersUpdated(restaurantId) {
         try {
             const orders = await this.getKitchenSnapshot(restaurantId);
-            this.server.to(this.roomName(restaurantId)).emit('orders.updated', { orders });
+            this.server
+                .to(this.roomName(restaurantId))
+                .emit('orders.updated', { orders });
         }
         catch (error) {
             this.logger.warn(`Failed to emit orders.updated for restaurant ${restaurantId}: ${String(error)}`);

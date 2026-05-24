@@ -102,10 +102,16 @@ async function migrateOrderItems(): Promise<void> {
 
 // Helper RPC functions to be created in Supabase
 async function ensureHelperFunctions(): Promise<void> {
+  async function createRpcFunction(sql: string) {
+    try {
+      await supabase.rpc('exec_sql', { sql });
+    } catch {
+      // Function might already exist or call failed; continue
+    }
+  }
+
   // Create RPC function to fix order_items
-  await supabase
-    .rpc('exec_sql', {
-      sql: `
+  await createRpcFunction(`
       create or replace function fix_order_items_restaurant_id()
       returns void as $$
       begin
@@ -116,16 +122,10 @@ async function ensureHelperFunctions(): Promise<void> {
           and oi.restaurant_id is null;
       end;
       $$ language plpgsql;
-    `,
-    })
-    .catch(() => {
-      // Function might already exist, continue
-    });
+    `);
 
   // Create RPC function to validate consistency
-  await supabase
-    .rpc('exec_sql', {
-      sql: `
+  await createRpcFunction(`
       create or replace function validate_order_items_consistency()
       returns table(order_item_id uuid, order_restaurant uuid, items_restaurant uuid) as $$
       begin
@@ -136,11 +136,7 @@ async function ensureHelperFunctions(): Promise<void> {
         where o.restaurant_id <> oi.restaurant_id;
       end;
       $$ language plpgsql;
-    `,
-    })
-    .catch(() => {
-      // Function might already exist, continue
-    });
+    `);
 }
 
 migrateOrderItems().catch(console.error);

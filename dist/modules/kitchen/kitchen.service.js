@@ -21,11 +21,7 @@ let KitchenService = class KitchenService {
         return this.ordersService.findKitchenSnapshot(restaurantId);
     }
     async updateOrderStatus(restaurantId, orderId, updateOrderStatusDto) {
-        const order = (await this.ordersService.findOne(orderId));
-        if (order.restaurant_id !== restaurantId) {
-            throw new common_1.ForbiddenException('Order does not belong to your restaurant');
-        }
-        return this.ordersService.updateStatus(orderId, updateOrderStatusDto);
+        return this.ordersService.updateStatusForRestaurant(orderId, restaurantId, updateOrderStatusDto);
     }
 };
 exports.KitchenService = KitchenService;

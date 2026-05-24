@@ -15,21 +15,43 @@ const config_1 = require("@nestjs/config");
 const supabase_js_1 = require("@supabase/supabase-js");
 let SupabaseService = class SupabaseService {
     configService;
-    client = null;
+    serviceClient = null;
+    anonKey = null;
     constructor(configService) {
         this.configService = configService;
     }
     getClient() {
-        if (this.client) {
-            return this.client;
-        }
+        if (this.serviceClient)
+            return this.serviceClient;
         const supabaseUrl = this.configService.get('SUPABASE_URL');
         const supabaseServiceRoleKey = this.configService.get('SUPABASE_SERVICE_ROLE_KEY');
         if (!supabaseUrl || !supabaseServiceRoleKey) {
             throw new common_1.InternalServerErrorException('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
         }
-        this.client = (0, supabase_js_1.createClient)(supabaseUrl, supabaseServiceRoleKey);
-        return this.client;
+        this.serviceClient = (0, supabase_js_1.createClient)(supabaseUrl, supabaseServiceRoleKey);
+        return this.serviceClient;
+    }
+    getServiceClient() {
+        return this.getClient();
+    }
+    getAnonClient() {
+        const supabaseUrl = this.configService.get('SUPABASE_URL');
+        const supabaseAnonKey = this.configService.get('SUPABASE_ANON_KEY');
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new common_1.InternalServerErrorException('SUPABASE_URL and SUPABASE_ANON_KEY are required for anon clients.');
+        }
+        return (0, supabase_js_1.createClient)(supabaseUrl, supabaseAnonKey);
+    }
+    getClientWithAuth(accessToken) {
+        const supabaseUrl = this.configService.get('SUPABASE_URL');
+        const supabaseAnonKey = this.configService.get('SUPABASE_ANON_KEY');
+        if (!supabaseUrl || !supabaseAnonKey) {
+            throw new common_1.InternalServerErrorException('SUPABASE_URL and SUPABASE_ANON_KEY are required for user-scoped clients.');
+        }
+        const client = (0, supabase_js_1.createClient)(supabaseUrl, supabaseAnonKey, {
+            global: { headers: { Authorization: `Bearer ${accessToken}` } },
+        });
+        return client;
     }
 };
 exports.SupabaseService = SupabaseService;

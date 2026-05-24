@@ -59,12 +59,13 @@ let StaffService = class StaffService {
             .select('id, restaurant_id')
             .eq('id', staffUserId)
             .single();
-        if (!user || user.restaurant_id !== restaurantId) {
+        if (!user ||
+            user.restaurant_id !== restaurantId) {
             throw new common_1.ForbiddenException('Staff member not found in your restaurant');
         }
         const { error } = await supabase
             .from('users')
-            .update({ restaurant_id: null, role: 'owner' })
+            .update({ restaurant_id: null, role: 'user' })
             .eq('id', staffUserId);
         if (error)
             throw new common_1.InternalServerErrorException(error.message);
