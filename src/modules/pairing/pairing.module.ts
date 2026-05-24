@@ -9,10 +9,12 @@ import { PairingService } from './pairing.service';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const secret = configService.get<string>('KDS_JWT_SECRET');
+        const secret =
+          configService.get<string>('KDS_JWT_SECRET') ||
+          configService.get<string>('JWT_SECRET');
 
         if (!secret) {
-          throw new Error('KDS_JWT_SECRET is required');
+          throw new Error('KDS_JWT_SECRET or JWT_SECRET is required');
         }
 
         return { secret };
