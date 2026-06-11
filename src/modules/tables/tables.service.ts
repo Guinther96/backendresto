@@ -49,7 +49,7 @@ export class TablesService {
     );
 
     const { data, error } = await this.supabaseService
-      .getClient()
+      .getAnonClient()
       .from('tables')
       .select('*')
       .eq('restaurant_id', restaurantId)
@@ -193,7 +193,7 @@ export class TablesService {
     ({ restaurant_id: string; number: number } & Record<string, unknown>) | null
   > {
     const { data, error } = await this.supabaseService
-      .getClient()
+      .getAnonClient()
       .from('tables')
       .select('*')
       .eq('qr_code', qrCode)
