@@ -98,18 +98,25 @@ export class AuthService {
       );
     }
 
-    const { data: profile } = await supabase
+    const serviceClient = this.supabaseService.getClient();
+    const { data: profile, error: profileError } = await serviceClient
       .from('users')
       .select('id, email, role, restaurant_id')
       .eq('id', signInData.user.id)
       .single();
+
+    if (profileError || !profile) {
+      throw new InternalServerErrorException(
+        profileError?.message ?? 'Unable to load user profile',
+      );
+    }
 
     const restaurantId = (profile as { restaurant_id?: string } | null)
       ?.restaurant_id;
 
     let restaurant: unknown = null;
     if (restaurantId) {
-      const { data } = await supabase
+      const { data } = await serviceClient
         .from('restaurants')
         .select('*')
         .eq('id', restaurantId)

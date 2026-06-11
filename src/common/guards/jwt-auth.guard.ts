@@ -37,14 +37,18 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    // Use a user-scoped client (anon key + access token) so that RLS policies
-    // can be applied server-side and queries return only rows the user can see.
-    const userClient = this.supabaseService.getClientWithAuth(token);
-    const { data: profile } = await userClient
+    // Read the authenticated user's profile using the service role client.
+    // The access token was already validated, so fetching this specific row by
+    // id is safe and avoids returning null because of restrictive RLS on users.
+    const { data: profile, error: profileError } = await serviceClient
       .from('users')
       .select('role, restaurant_id')
       .eq('id', user.id)
       .single();
+
+    if (profileError || !profile) {
+      throw new UnauthorizedException('Unable to load user profile');
+    }
 
     const requestUser: RequestUser = {
       id: user.id,
