@@ -81,7 +81,8 @@ export class TablesService {
       throw new InternalServerErrorException(error.message);
     }
 
-    return data ?? [];
+    const rows = (data ?? []) as Record<string, any>[];
+    return rows.map((r) => this.normalizeTableRow(r));
   }
 
   async findOne(id: string): Promise<unknown> {
@@ -96,7 +97,7 @@ export class TablesService {
       throw new NotFoundException('Table not found');
     }
 
-    return data;
+    return this.normalizeTableRow(data as Record<string, any>);
   }
 
   async findOneForRestaurant(
@@ -115,7 +116,7 @@ export class TablesService {
       throw new NotFoundException('Table not found');
     }
 
-    return data;
+    return this.normalizeTableRow(data as Record<string, any>);
   }
 
   async create(
@@ -159,7 +160,62 @@ export class TablesService {
       );
     }
 
-    return data;
+    return this.normalizeTableRow(data as Record<string, any>);
+  }
+
+  private normalizeTableRow(row: Record<string, any>): Record<string, any> {
+    const frontendUrl = (process.env.FRONTEND_URL ?? 'https://orderclient.netlify.app').replace(/\/$/, '');
+
+    // Prefer explicit qr_token if provided by backend
+    const token = row.qr_token ?? row.qrToken ?? row.qr_code;
+
+    if (typeof token === 'string' && token.trim().length > 0) {
+      // If token is a full URL, try to normalize `/menu/<id>?table=n` -> `/?restaurant_id=<id>&table=n`
+      try {
+        const url = new URL(token);
+
+        // If URL already contains restaurant_id or restaurantId param, use it as-is
+        if (url.searchParams.has('restaurant_id') || url.searchParams.has('restaurantId')) {
+          return { ...row, qr_code: token };
+        }
+
+        // Match /menu/<restaurantId> pattern in the path
+        const menuMatch = url.pathname.match(/\/menu\/(?:@?)([^\/\?]+)/i);
+        const tableParam = url.searchParams.get('table') ?? url.searchParams.get('number');
+
+        if (menuMatch) {
+          const rid = menuMatch[1];
+          const table = tableParam ?? row.number ?? url.hash.replace(/^#/, '');
+          if (rid) {
+            const built = `${frontendUrl}/?restaurant_id=${encodeURIComponent(rid)}${table ? `&table=${encodeURIComponent(String(table))}` : ''}`;
+            return { ...row, qr_code: built };
+          }
+        }
+
+        // If token is a URL but doesn't match known patterns, return as-is
+        return { ...row, qr_code: token };
+      } catch {
+        // Not a URL — if it looks like internal qr payload 'table:...' keep as-is
+        return { ...row, qr_code: token };
+      }
+    }
+
+    // No token found: if qr_code exists and looks like `table:<id>:<n>`, convert it
+    if (typeof row.qr_code === 'string' && row.qr_code.startsWith('table:')) {
+      try {
+        const parts = row.qr_code.split(':');
+        const rid = parts[1];
+        const table = parts[2];
+        if (rid && table) {
+          const built = `${frontendUrl}/?restaurant_id=${encodeURIComponent(rid)}&table=${encodeURIComponent(table)}`;
+          return { ...row, qr_code: built };
+        }
+      } catch {
+        // fallthrough
+      }
+    }
+
+    return row;
   }
 
   private parseTableQrCode(qrCode: string): {
