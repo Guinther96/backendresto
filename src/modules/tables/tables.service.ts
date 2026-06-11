@@ -129,12 +129,12 @@ export class TablesService {
       );
     }
     const frontendUrl = (
-      process.env.FRONTEND_URL ?? 'https://ordersclient.netlify.app'
+      process.env.FRONTEND_URL ?? 'https://orderclient.netlify.app'
     ).replace(/\/$/, '');
-    const qrCode = `${frontendUrl}/menu/${restaurantId}?table=${createTableDto.number}`;
+    const qrCode = `${frontendUrl}/?restaurant_id=${restaurantId}&table=${createTableDto.number}`;
 
     const { data, error } = await this.supabaseService
-      .getClient()
+      .getAnonClient()
       .from('tables')
       .insert({
         restaurant_id: restaurantId,
