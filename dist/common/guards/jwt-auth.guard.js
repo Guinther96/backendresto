@@ -30,12 +30,14 @@ let JwtAuthGuard = class JwtAuthGuard {
         if (error || !user) {
             throw new common_1.UnauthorizedException('Invalid or expired token');
         }
-        const userClient = this.supabaseService.getClientWithAuth(token);
-        const { data: profile } = await userClient
+        const { data: profile, error: profileError } = await serviceClient
             .from('users')
             .select('role, restaurant_id')
             .eq('id', user.id)
             .single();
+        if (profileError || !profile) {
+            throw new common_1.UnauthorizedException('Unable to load user profile');
+        }
         const requestUser = {
             id: user.id,
             email: user.email ?? '',

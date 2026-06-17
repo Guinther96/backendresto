@@ -8,6 +8,7 @@ export declare class TablesService {
     findOne(id: string): Promise<unknown>;
     findOneForRestaurant(id: string, restaurantId: string): Promise<unknown>;
     create(createTableDto: CreateTableDto, restaurantIdOverride?: string): Promise<unknown>;
+    private normalizeTableRow;
     private parseTableQrCode;
     private findByExactQrCode;
     private extractQrPayloadFromUrl;

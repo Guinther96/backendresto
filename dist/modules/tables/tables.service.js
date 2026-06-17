@@ -47,7 +47,7 @@ let TablesService = class TablesService {
         }
         const { restaurantId, tableNumber } = this.parseTableQrCode(decodedPayload ?? normalizedQrCode);
         const { data, error } = await this.supabaseService
-            .getClient()
+            .getAnonClient()
             .from('tables')
             .select('*')
             .eq('restaurant_id', restaurantId)
@@ -74,7 +74,8 @@ let TablesService = class TablesService {
         if (error) {
             throw new common_1.InternalServerErrorException(error.message);
         }
-        return data ?? [];
+        const rows = (data ?? []);
+        return rows.map((r) => this.normalizeTableRow(r));
     }
     async findOne(id) {
         const { data, error } = await this.supabaseService
@@ -86,7 +87,7 @@ let TablesService = class TablesService {
         if (error || !data) {
             throw new common_1.NotFoundException('Table not found');
         }
-        return data;
+        return this.normalizeTableRow(data);
     }
     async findOneForRestaurant(id, restaurantId) {
         const { data, error } = await this.supabaseService
@@ -99,17 +100,17 @@ let TablesService = class TablesService {
         if (error || !data) {
             throw new common_1.NotFoundException('Table not found');
         }
-        return data;
+        return this.normalizeTableRow(data);
     }
     async create(createTableDto, restaurantIdOverride) {
         const restaurantId = restaurantIdOverride;
         if (!restaurantId) {
             throw new common_1.InternalServerErrorException('Authenticated restaurant_id is required');
         }
-        const frontendUrl = (process.env.FRONTEND_URL ?? 'https://ordersclient.netlify.app').replace(/\/$/, '');
-        const qrCode = `${frontendUrl}/menu/${restaurantId}?table=${createTableDto.number}`;
+        const frontendUrl = (process.env.FRONTEND_URL ?? 'https://orderclient.netlify.app').replace(/\/$/, '');
+        const qrCode = `${frontendUrl}/?restaurant_id=${restaurantId}&table=${createTableDto.number}`;
         const { data, error } = await this.supabaseService
-            .getClient()
+            .getAnonClient()
             .from('tables')
             .insert({
             restaurant_id: restaurantId,
@@ -127,7 +128,47 @@ let TablesService = class TablesService {
         if (error || !data) {
             throw new common_1.InternalServerErrorException(error?.message ?? 'Failed to create table');
         }
-        return data;
+        return this.normalizeTableRow(data);
+    }
+    normalizeTableRow(row) {
+        const frontendUrl = (process.env.FRONTEND_URL ?? 'https://orderclient.netlify.app').replace(/\/$/, '');
+        const token = row.qr_token ?? row.qrToken ?? row.qr_code;
+        if (typeof token === 'string' && token.trim().length > 0) {
+            try {
+                const url = new URL(token);
+                if (url.searchParams.has('restaurant_id') || url.searchParams.has('restaurantId')) {
+                    return { ...row, qr_code: token };
+                }
+                const menuMatch = url.pathname.match(/\/menu\/(?:@?)([^\/\?]+)/i);
+                const tableParam = url.searchParams.get('table') ?? url.searchParams.get('number');
+                if (menuMatch) {
+                    const rid = menuMatch[1];
+                    const table = tableParam ?? row.number ?? url.hash.replace(/^#/, '');
+                    if (rid) {
+                        const built = `${frontendUrl}/?restaurant_id=${encodeURIComponent(rid)}${table ? `&table=${encodeURIComponent(String(table))}` : ''}`;
+                        return { ...row, qr_code: built };
+                    }
+                }
+                return { ...row, qr_code: token };
+            }
+            catch {
+                return { ...row, qr_code: token };
+            }
+        }
+        if (typeof row.qr_code === 'string' && row.qr_code.startsWith('table:')) {
+            try {
+                const parts = row.qr_code.split(':');
+                const rid = parts[1];
+                const table = parts[2];
+                if (rid && table) {
+                    const built = `${frontendUrl}/?restaurant_id=${encodeURIComponent(rid)}&table=${encodeURIComponent(table)}`;
+                    return { ...row, qr_code: built };
+                }
+            }
+            catch {
+            }
+        }
+        return row;
     }
     parseTableQrCode(qrCode) {
         const parts = qrCode.split(':');
@@ -147,7 +188,7 @@ let TablesService = class TablesService {
     }
     async findByExactQrCode(qrCode) {
         const { data, error } = await this.supabaseService
-            .getClient()
+            .getAnonClient()
             .from('tables')
             .select('*')
             .eq('qr_code', qrCode)

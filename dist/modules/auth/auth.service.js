@@ -79,16 +79,20 @@ let AuthService = class AuthService {
         if (signInError || !signInData.session || !signInData.user) {
             throw new common_1.UnauthorizedException(signInError?.message ?? 'Invalid credentials');
         }
-        const { data: profile } = await supabase
+        const serviceClient = this.supabaseService.getClient();
+        const { data: profile, error: profileError } = await serviceClient
             .from('users')
             .select('id, email, role, restaurant_id')
             .eq('id', signInData.user.id)
             .single();
+        if (profileError || !profile) {
+            throw new common_1.InternalServerErrorException(profileError?.message ?? 'Unable to load user profile');
+        }
         const restaurantId = profile
             ?.restaurant_id;
         let restaurant = null;
         if (restaurantId) {
-            const { data } = await supabase
+            const { data } = await serviceClient
                 .from('restaurants')
                 .select('*')
                 .eq('id', restaurantId)
