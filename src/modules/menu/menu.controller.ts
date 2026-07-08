@@ -37,6 +37,7 @@ export class MenuController {
     return this.menuService.findByRestaurant(user.restaurantId);
   }
 
+  // Legacy alias kept for compatibility; canonical route is /restaurants/:restaurantId/menu.
   @Get('restaurant/:restaurantId')
   findByRestaurantAlias(
     @Param('restaurantId', new ParseUUIDPipe({ version: '4' }))
