@@ -8,6 +8,7 @@ describe('OrdersController - access control', () => {
   const mockService = {
     findByRestaurant: jest.fn(),
     findByRestaurantList: jest.fn(),
+    findOne: jest.fn(),
   } as unknown as OrdersService;
 
   beforeEach(() => {
@@ -36,5 +37,15 @@ describe('OrdersController - access control', () => {
     );
     const res = controller.findByRestaurant(user, restaurantId, pagination);
     expect(res).toBeInstanceOf(Promise);
+  });
+
+  it('looks up an order by id alone, unscoped by restaurant (guest tracking)', () => {
+    const orderId = '11111111-1111-4111-8111-111111111111';
+    (mockService.findOne as jest.Mock).mockReturnValue(
+      Promise.resolve({ id: orderId, items: [] }),
+    );
+    const res = controller.findOne(orderId);
+    expect(res).toBeInstanceOf(Promise);
+    expect(mockService.findOne).toHaveBeenCalledWith(orderId);
   });
 });

@@ -64,15 +64,12 @@ export class OrdersController {
     return this.ordersService.findByRestaurant(restaurantId, paginationQuery);
   }
 
+  // Public: guest order tracking. The client only ever learns an order's
+  // UUID by creating it via the (also public) POST /orders, so possession
+  // of the id is the access proof — same model as a parcel tracking number.
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  findOne(
-    @CurrentUser() user: RequestUser,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ) {
-    if (!user.restaurantId)
-      throw new ForbiddenException('No restaurant linked');
-    return this.ordersService.findOneForRestaurant(id, user.restaurantId);
+  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return this.ordersService.findOne(id);
   }
 
   @Patch(':id/status')
