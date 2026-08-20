@@ -59,6 +59,11 @@ export class JwtAuthGuard implements CanActivate {
     };
 
     request.user = requestUser;
+    console.log('JWT USER:', {
+  authUserId: user.id,
+  email: user.email,
+  restaurantId: requestUser.restaurantId,
+});
     return true;
   }
 

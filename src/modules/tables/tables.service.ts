@@ -13,6 +13,7 @@ export class TablesService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async resolveByQr(qrCode: string): Promise<unknown> {
+    console.log('QR normalisé :', qrCode);
     if (typeof qrCode !== 'string' || qrCode.trim().length === 0) {
       throw new BadRequestException('qrCode is required');
     }
@@ -55,7 +56,10 @@ export class TablesService {
       .eq('restaurant_id', restaurantId)
       .eq('number', tableNumber)
       .single();
-
+      
+      console.log('Supabase data:', data);
+      console.log('Supabase error:', error);
+      
     if (error || !data) {
       throw new NotFoundException('Table not found for this QR code');
     }
@@ -98,6 +102,30 @@ export class TablesService {
     }
 
     return this.normalizeTableRow(data as Record<string, any>);
+  }
+
+  async findByRestaurantAndCode(
+    restaurantId: string,
+    code: string,
+  ): Promise<Record<string, any>> {
+    const tableNumber = Number.parseInt(code, 10);
+    if (!Number.isInteger(tableNumber)) {
+      throw new NotFoundException('Table not found for this restaurant');
+    }
+
+    const { data, error } = await this.supabaseService
+      .getAnonClient()
+      .from('tables')
+      .select('*')
+      .eq('restaurant_id', restaurantId)
+      .eq('number', tableNumber)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException('Table not found for this restaurant');
+    }
+
+    return data as Record<string, any>;
   }
 
   async findOneForRestaurant(
