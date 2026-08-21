@@ -9,6 +9,7 @@ import {
 import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { SupabaseService } from '../../database/supabase.service';
+import { OrderItemsService } from '../order-items/order-items.service';
 
 @WebSocketGateway({
   namespace: 'orders',
@@ -20,7 +21,10 @@ export class KdsOrdersGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly orderItemsService: OrderItemsService,
+  ) {}
 
   async handleConnection(client: Socket): Promise<void> {
     const restaurantId = this.extractRestaurantId(client.handshake.query);
@@ -74,22 +78,10 @@ export class KdsOrdersGateway implements OnGatewayConnection {
     }
 
     const enrichedOrders = await Promise.all(
-      (orders ?? []).map(async (order) => {
-        const { data: items, error: itemsError } = await this.supabaseService
-          .getClient()
-          .from('order_items')
-          .select('*')
-          .eq('order_id', order.id);
-
-        if (itemsError) {
-          throw new InternalServerErrorException(itemsError.message);
-        }
-
-        return {
-          ...order,
-          items: items ?? [],
-        };
-      }),
+      (orders ?? []).map(async (order) => ({
+        ...order,
+        items: await this.orderItemsService.findByOrder(order.id),
+      })),
     );
 
     return enrichedOrders;

@@ -182,8 +182,12 @@ export class PairingService {
     }
 
     const restaurantId = usedRow.restaurant_id;
+    // Kitchen tablets stay paired and running for days/weeks at a time; a
+    // short TTL here doesn't get refreshed by the client, it just expires
+    // silently mid-shift while the (unauthenticated) realtime order feed
+    // keeps the screen looking live, and the next status-update click 401s.
     const expiresInRaw =
-      this.configService.get<string>('KDS_JWT_EXPIRES_IN') ?? '12h';
+      this.configService.get<string>('KDS_JWT_EXPIRES_IN') ?? '30d';
     const expiresIn: number | StringValue = /^\d+$/.test(expiresInRaw)
       ? Number(expiresInRaw)
       : (expiresInRaw as StringValue);
